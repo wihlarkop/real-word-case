@@ -41,7 +41,7 @@ industries: list[CategorySchema] = [
 difficulties: list[CategorySchema] = [
     CategorySchema(value="any_difficulty", label="Any Difficulty"),
     CategorySchema(value="easy", label="Easy"),
-    CategorySchema(value="medium", label="medium"),
+    CategorySchema(value="medium", label="Medium"),
     CategorySchema(value="hard", label="Hard")
 ]
 
