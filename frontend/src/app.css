@@ -1,0 +1,261 @@
+@import "tailwindcss";
+
+/* Enhanced Markdown Styles untuk RealWorldCase */
+
+/* Base markdown container */
+.markdown-content {
+  color: #374151;
+  line-height: 1.7;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Headings */
+.markdown-content h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1.5rem;
+  margin-top: 2rem;
+  border-bottom: 3px solid #ef4444;
+  padding-bottom: 0.5rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.25rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin-bottom: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.markdown-content h4 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Paragraphs */
+.markdown-content p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  line-height: 1.7;
+  text-align: justify;
+}
+
+.markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.markdown-content ul,
+.markdown-content ol {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+  position: relative;
+  line-height: 1.6;
+}
+
+.markdown-content ul li::marker {
+  content: "▸ ";
+  color: #ef4444;
+}
+
+.markdown-content ol li {
+  counter-increment: item;
+}
+
+.markdown-content ol li::marker {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Nested lists */
+.markdown-content ul ul li::marker {
+  content: "• ";
+}
+.markdown-content ul ul ul li::marker {
+  content: "◦ ";
+}
+
+/* Code blocks */
+.markdown-content pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  border-left: 4px solid #ef4444;
+}
+
+.markdown-content code {
+  background-color: #f3f4f6;
+  color: #ef4444;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.95em;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  color: #10b981;
+  padding: 0;
+}
+
+/* Blockquotes */
+.markdown-content blockquote {
+  border-left: 4px solid #ef4444;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+  background-color: #fef2f2;
+  padding: 1rem;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.markdown-content blockquote p {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Tables */
+.markdown-content table {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+}
+
+.markdown-content th {
+  background-color: #fef2f2;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+}
+
+.markdown-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 1rem;
+}
+
+.markdown-content tr:nth-child(even) {
+  background-color: #f3f4f6;
+}
+
+/* Links */
+.markdown-content a {
+  color: #ef4444;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+.markdown-content a:hover {
+  color: #b91c1c;
+}
+
+/* Strong and emphasis */
+.markdown-content strong {
+  font-weight: 600;
+  color: #111827;
+  background-color: #fef3c7;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.markdown-content em {
+  font-style: italic;
+  color: #6b7280;
+}
+
+/* Horizontal rules */
+.markdown-content hr {
+  border: 0;
+  border-top: 2px solid #e5e7eb;
+  margin: 2rem 0;
+}
+
+/* Special styling for challenge content */
+.challenge-content {
+  /* Inherit markdown-content styles */
+}
+
+.challenge-content h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.challenge-content h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  .markdown-content h1 {
+    font-size: 1.5rem;
+  }
+  .markdown-content h2 {
+    font-size: 1.25rem;
+  }
+  .markdown-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+}
+
+/* Enhanced styling for expanded view */
+.expanded-markdown {
+  text-align: center;
+}
+.expanded-markdown h1 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: 2rem;
+}
+.expanded-markdown p {
+  font-size: 1.25rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  max-width: 60ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Animation for better UX */
+.markdown-content {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
