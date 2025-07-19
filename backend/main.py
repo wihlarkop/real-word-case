@@ -67,25 +67,20 @@ class ChallengeRequest(BaseModel):
 
 
 def build_prompt(industry: str, role: str, difficulty: str) -> str:
-    return f"""
-    You are a scenario designer generating creative, open-ended prompts for software engineers.
-    
-    Generate a short, realistic product or stakeholder request as a markdown-formatted narrative.
-    
-    Context:
-    - Role: {role} software engineer
-    - Industry: {industry}
-    - Difficulty level: {difficulty}
-    
-    Guidelines:
-    - Use 3–5 sentences in total
-    - Present a concise product need or situation without introducing sample data, code, or structure
-    - Write in natural, narrative form – like a product brief or real-world stakeholder request
-    - Avoid bullet points, headers, code blocks, and JSON
-    - Do not mention "title", "industry", or any other metadata
-    - The challenge should inspire creative engineering thought without being too long or too prescriptive
-    
-    Only return the markdown description as a plain string.
+    return f"""Create a realistic work scenario for a {role} in {industry} (difficulty: {difficulty}).
+        Write 3-4 sentences describing a product or technical challenge that needs to be solved. Write it as if a product manager or stakeholder is explaining the problem to you.
+        
+        Do not include:
+        - Code examples or technical implementation details
+        - Bullet points or structured lists
+        - Headers or markdown formatting
+        - The words "title", "industry", "role", or "difficulty"
+        
+        Just write a plain narrative describing what needs to be built or solved.
+        
+        Example format: "The customer service team is struggling with... They need a solution that can... The goal is to..."
+        
+        Generate the scenario now:
     """
 
 
