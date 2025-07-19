@@ -1,13 +1,14 @@
-<script>
+<script lang="ts">
   import CustomMarkdown from './CustomMarkdown.svelte';
   import { Copy, Trash2, RotateCcw } from 'lucide-svelte';
-  export let challenge;
-  export let isLatest = false;
-  export let onExpand = () => {};
-  export let onCopy = () => {};
-  export let onShare = () => {};
-  export let onDelete = () => {};
-  export let onRegenerate = null; // only for latest
+  import type { Challenge } from '../types';
+  export let challenge: Challenge;
+  export let isLatest: boolean = false;
+  export let onExpand: () => void = () => {};
+  export let onCopy: () => void = () => {};
+  export let onShare: (() => void) | null = null;
+  export let onDelete: (() => void) | null = null;
+  export let onRegenerate: (() => void) | null = null;
 </script>
 
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">

@@ -1,6 +1,5 @@
-<script>
-    import {onMount, onDestroy} from 'svelte';
-    import {browser} from '$app/environment';
+<script lang="ts">
+    import { onMount, onDestroy } from 'svelte';
     import Header from '$lib/components/Header.svelte';
     import WarningBanner from '$lib/components/WarningBanner.svelte';
     import Footer from '$lib/components/Footer.svelte';
@@ -8,13 +7,13 @@
     import DropdownGroup from '$lib/components/DropdownGroup.svelte';
     import Toast from '$lib/components/Toast.svelte';
     import CustomMarkdown from "$lib/components/CustomMarkdown.svelte";
-    import {Clock} from 'lucide-svelte';
+    import { Clock } from 'lucide-svelte';
+    import type { Challenge } from '$lib/types';
 
-    // State using Svelte 5 runes
     let categories = $state({
-        industries: [],
-        roles: [],
-        difficulties: []
+        industries: [] as { value: string; label: string }[],
+        roles: [] as { value: string; label: string }[],
+        difficulties: [] as { value: string; label: string }[],
     });
 
     let selectedCategory = $state({
@@ -23,25 +22,18 @@
         difficulty: ''
     });
 
-    let challenges = $state([]);
-    let isLoading = $state(false);
+    let challenges = $state([] as Challenge[]);
     let isGenerating = $state(false);
     let showWarningBanner = $state(false);
-
     let showExpandedView = $state(false);
-    let expandedChallenge = $state(null);
-
-    // Toast state
+    let expandedChallenge = $state(null as Challenge | null);
     let showToast = $state(false);
     let toastType = $state('copy');
     let toastChallengeTitle = $state('');
-
     let isCategoryError = $state(false);
 
-    let isLeaving = false;
-
     // Prevent accidental navigation away
-    function handleBeforeUnload(event) {
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
         if (isGenerating) {
             event.preventDefault();
             event.returnValue = '';
@@ -53,6 +45,7 @@
         if (typeof window !== 'undefined') {
             window.addEventListener('beforeunload', handleBeforeUnload);
         }
+        fetchCategories();
     });
     onDestroy(() => {
         if (typeof window !== 'undefined') {
@@ -61,14 +54,13 @@
     });
 
     // Fetch categories from API
-    async function fetchCategories() {
+    async function fetchCategories(): Promise<void> {
         try {
             const response = await fetch('http://localhost:8000/api/v1/category');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            // Use backend categories directly, do not add or hardcode 'Any ...' in FE
             categories.industries = data.industries || [];
             categories.roles = data.roles || [];
             categories.difficulties = data.difficulties || [];
@@ -84,8 +76,7 @@
         }
     }
 
-    function canSubmit() {
-        // All dropdowns must have a value (not empty string)
+    function canSubmit(): boolean {
         return !isCategoryError &&
             categories.industries.length > 0 &&
             categories.roles.length > 0 &&
@@ -95,9 +86,8 @@
             selectedCategory.difficulty !== '';
     }
 
-    // Generate challenge
-    async function generateChallenge() {
-        if (isGenerating) return; // Prevent double submit
+    async function generateChallenge(): Promise<void> {
+        if (isGenerating) return;
         isGenerating = true;
         try {
             const industry = selectedCategory.industry;
@@ -109,11 +99,7 @@
                     'accept': 'application/json',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    industry,
-                    role,
-                    difficulty
-                })
+                body: JSON.stringify({ industry, role, difficulty })
             });
             let challengeText = '';
             if (!response.ok) {
@@ -137,31 +123,23 @@
                 challengeText = data.result;
                 showWarningBanner = false;
             }
-            const newChallenge = {
+            const newChallenge: Challenge = {
                 id: Date.now(),
                 text: challengeText,
                 industry: categories.industries.find(opt => opt.value === industry)?.label || '',
                 role: categories.roles.find(opt => opt.value === role)?.label || '',
                 difficulty: categories.difficulties.find(opt => opt.value === difficulty)?.label || '',
-                date: new Date().toLocaleDateString('en-US', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                }),
+                date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
             };
             challenges = [newChallenge, ...challenges];
         } catch (error) {
-            const newChallenge = {
+            const newChallenge: Challenge = {
                 id: Date.now(),
-                text: 'That might happen, and we admit that!',
+                text: 'Sorry, we are experiencing issues connecting to our server. Please try again in a moment.',
                 industry: '',
                 role: '',
                 difficulty: '',
-                date: new Date().toLocaleDateString('en-US', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                }),
+                date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
             };
             challenges = [newChallenge, ...challenges];
             showWarningBanner = true;
@@ -170,49 +148,33 @@
         }
     }
 
-    function deleteChallenge(id) {
-        challenges = challenges.filter(challenge => challenge.id !== id);
+    function deleteChallenge(id: number): void {
+        challenges = challenges.filter((challenge) => challenge.id !== id);
     }
 
-    function copyChallenge(challenge) {
+    function copyChallenge(challenge: Challenge): void {
         navigator.clipboard.writeText(challenge.text);
-
-        // Extract challenge title from text (first few words)
         const title = challenge.text.split(' ').slice(0, 3).join(' ') + '...';
-
-        // Show copy toast
         toastType = 'copy';
         toastChallengeTitle = title;
         showToast = true;
     }
 
-    function shareChallenge(challenge) {
-        // Generate a shareable URL (simulate)
-        const challengeUrl = `${window.location.origin}/challenge/${challenge.id}`;
-        navigator.clipboard.writeText(challengeUrl);
-
-        // Extract challenge title from text (first few words)
+    function shareChallenge(challenge: Challenge): void {
         const title = challenge.text.split(' ').slice(0, 3).join(' ') + '...';
-
-        // Show share toast
         toastType = 'share';
         toastChallengeTitle = title;
         showToast = true;
     }
 
-    function openChallengeInNewTab(challengeId) {
+    function openChallengeInNewTab(challengeId: number): void {
         const challengeUrl = `${window.location.origin}/challenge/${challengeId}`;
         window.open(challengeUrl, '_blank');
     }
 
-    function clearHistory() {
+    function clearHistory(): void {
         challenges = [];
     }
-
-    // Load categories on mount
-    onMount(() => {
-        fetchCategories();
-    });
 </script>
 
 <div class="min-h-screen bg-gray-50">
@@ -306,7 +268,7 @@
                     Pick a combination above and generate your first software engineering prompt.
                 </p>
                 <div class="text-sm text-gray-400">
-                    💡 Tip: Mixing different settings can surprise you with unique real-world cases!
+                    Tip: Mixing different settings can surprise you with unique real-world cases!
                 </div>
             </div>
         {/if}
@@ -328,7 +290,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-                {#if browser}
+                {#if typeof window !== 'undefined'}
                     <CustomMarkdown
                         content={expandedChallenge.text}
                         variant="expanded"

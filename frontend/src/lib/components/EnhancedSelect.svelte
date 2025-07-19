@@ -1,10 +1,10 @@
-<script>
-    export let options = [];
-    export let value = '';
-    export let icon = null;
-    export let placeholder = 'Select an option';
-    export let disabled = false;
-    export let className = '';
+<script lang="ts">
+    export let options: { value: string; label: string }[] = [];
+    export let value: string = '';
+    export let icon: string = '';
+    export let placeholder: string = 'Select an option';
+    export let disabled: boolean = false;
+    export let className: string = '';
 </script>
 
 <div class="relative w-full">

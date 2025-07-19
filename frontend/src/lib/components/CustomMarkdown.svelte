@@ -1,15 +1,15 @@
-<script>
+<script lang="ts">
     import Markdown from 'svelte-exmarkdown';
     import { gfmPlugin } from 'svelte-exmarkdown/gfm';
     
-    export let content = '';
-    export let variant = 'default'; // 'default', 'expanded', 'compact'
-    export let className = '';
+    export let content: string = '';
+    export let variant: 'default' | 'expanded' | 'compact' = 'default'; 
+    export let className: string = '';
     
     const plugins = [gfmPlugin()];
     
     // Preprocessing untuk konten yang lebih baik
-    function preprocessContent(text) {
+    function preprocessContent(text: string): string {
         // Tambahkan emoji untuk section headers tertentu
         text = text.replace(/^## (Requirements?|Requirement)/gmi, '## 📋 $1');
         text = text.replace(/^## (Technical|Tech)/gmi, '## ⚙️ $1');
