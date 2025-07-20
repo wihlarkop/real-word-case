@@ -8,6 +8,7 @@
 	import Toast from '$lib/components/Toast.svelte';
 	import CustomMarkdown from '$lib/components/CustomMarkdown.svelte';
 	import type { Challenge } from '$lib/types';
+	import { fetchCategories, generateChallenge as apiGenerateChallenge } from '$lib/api';
 
 	let categories = $state({
 		industries: [] as { value: string; label: string }[],
@@ -40,11 +41,19 @@
 		}
 	}
 
-	onMount(() => {
+	onMount(async () => {
 		if (typeof window !== 'undefined') {
 			window.addEventListener('beforeunload', handleBeforeUnload);
 		}
-		fetchCategories();
+		try {
+			const data = await fetchCategories();
+			categories.industries = data.industries;
+			categories.roles = data.roles;
+			categories.difficulties = data.difficulties;
+		} catch (error) {
+			console.error('Failed to load categories:', error);
+			isCategoryError = true;
+		}
 	});
 	onDestroy(() => {
 		if (typeof window !== 'undefined') {
@@ -52,28 +61,6 @@
 		}
 	});
 
-	// Fetch categories from API
-	async function fetchCategories(): Promise<void> {
-		try {
-			const response = await fetch('http://localhost:8000/api/v1/category');
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-			const data = await response.json();
-			categories.industries = data.industries || [];
-			categories.roles = data.roles || [];
-			categories.difficulties = data.difficulties || [];
-		} catch (error) {
-			console.error('Failed to fetch categories:', error);
-			categories.industries = [];
-			categories.roles = [];
-			categories.difficulties = [];
-			selectedCategory.industry = '';
-			selectedCategory.role = '';
-			selectedCategory.difficulty = '';
-			isCategoryError = true;
-		}
-	}
 
 	function canSubmit(): boolean {
 		return !isCategoryError &&
@@ -88,61 +75,29 @@
 	async function generateChallenge(): Promise<void> {
 		if (isGenerating) return;
 		isGenerating = true;
+		let challengeText: string = '';
 		try {
-			const industry = selectedCategory.industry;
-			const role = selectedCategory.role;
-			const difficulty = selectedCategory.difficulty;
-			const response = await fetch('http://localhost:8000/api/v1/challenge', {
-				method: 'POST',
-				headers: {
-					'accept': 'application/json',
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ industry, role, difficulty })
-			});
-			let challengeText = '';
-			if (!response.ok) {
-				let errorMsg = 'Something went wrong. ';
-				try {
-					const errData = await response.json();
-					if (errData && errData.detail) {
-						errorMsg += errData.detail;
-					} else if (errData && errData.message) {
-						errorMsg += errData.message;
-					} else {
-						errorMsg += `Server responded with status ${response.status}`;
-					}
-				} catch (e) {
-					errorMsg += `Server responded with status ${response.status}`;
-				}
-				challengeText = errorMsg;
-				showWarningBanner = true;
-			} else {
-				const data = await response.json();
-				challengeText = data.result;
-				showWarningBanner = false;
-			}
+			const { industry, role, difficulty } = selectedCategory;
+			challengeText = await apiGenerateChallenge(industry, role, difficulty);
+			showWarningBanner = false;
+		} catch (error) {
+			challengeText = error instanceof Error ? error.message : 'An unknown error occurred.';
+			showWarningBanner = true;
+		} finally {
+			const { industry, role, difficulty } = selectedCategory;
 			const newChallenge: Challenge = {
 				id: Date.now(),
 				text: challengeText,
-				industry: categories.industries.find(opt => opt.value === industry)?.label || '',
-				role: categories.roles.find(opt => opt.value === role)?.label || '',
-				difficulty: categories.difficulties.find(opt => opt.value === difficulty)?.label || '',
-				date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+				industry: categories.industries.find((opt) => opt.value === industry)?.label || '',
+				role: categories.roles.find((opt) => opt.value === role)?.label || '',
+				difficulty: categories.difficulties.find((opt) => opt.value === difficulty)?.label || '',
+				date: new Date().toLocaleDateString('en-US', {
+					day: 'numeric',
+					month: 'short',
+					year: 'numeric'
+				})
 			};
 			challenges = [newChallenge, ...challenges];
-		} catch (error) {
-			const newChallenge: Challenge = {
-				id: Date.now(),
-				text: 'Sorry, we are experiencing issues connecting to our server. Please try again in a moment.',
-				industry: '',
-				role: '',
-				difficulty: '',
-				date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
-			};
-			challenges = [newChallenge, ...challenges];
-			showWarningBanner = true;
-		} finally {
 			isGenerating = false;
 		}
 	}
@@ -223,48 +178,56 @@
 		</div>
 
 		<!-- History Section: Always show all challenges, including latest -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8 mt-8">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path d="M3 12a9 9 0 1 0 9-9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M3 3v6h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="font-semibold text-lg text-gray-800">History</span>
-                    {#if challenges.length > 0}
-                        <span class="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{challenges.length}</span>
-                    {/if}
-                </div>
-                <button class="text-gray-400 hover:text-red-500 flex items-center gap-1 text-sm font-medium" onclick={clearHistory} disabled={challenges.length === 0}>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m5 6v6m4-6v6" stroke-width="2" /></svg>
-                    Clear
-                </button>
-            </div>
-            {#if challenges.length === 0}
-                <div class="flex flex-col items-center justify-center py-12">
-                    <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 48 48">
-                        <circle cx="24" cy="24" r="22" stroke-width="4" class="opacity-10" />
-                        <path d="M32 32c-2 2-8 2-10 0-2-2-2-8 0-10 2-2 8-2 10 0 2 2 2 8 0 10z" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-                        <path d="M28 36l2 2m-10-2l-2 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <div class="font-medium text-gray-500 mb-1">No challenges generated yet</div>
-                    <div class="text-gray-400 text-sm">Your challenge history will appear here after you generate some challenges</div>
-                </div>
-            {:else}
-                <div>
-                    {#each challenges as challenge, i}
-                        <ChallengeCard
-                            challenge={challenge}
-                            isLatest={i === 0}
-                            onExpand={() => { expandedChallenge = challenge; showExpandedView = true; }}
-                            onCopy={() => copyChallenge(challenge)}
-                            onShare={() => shareChallenge(challenge)}
-                            onRegenerate={generateChallenge}
-                        />
-                    {/each}
-                </div>
-            {/if}
-        </div>
+		<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8 mt-8">
+			<div class="flex items-center justify-between mb-4">
+				<div class="flex items-center gap-2">
+					<svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path d="M3 12a9 9 0 1 0 9-9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+						<path d="M3 3v6h6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					<span class="font-semibold text-lg text-gray-800">History</span>
+					{#if challenges.length > 0}
+						<span class="ml-2 bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{challenges.length}</span>
+					{/if}
+				</div>
+				<button class="text-gray-400 hover:text-red-500 flex items-center gap-1 text-sm font-medium"
+								onclick={clearHistory} disabled={challenges.length === 0}>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18" />
+						<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" />
+						<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m5 6v6m4-6v6" stroke-width="2" />
+					</svg>
+					Clear
+				</button>
+			</div>
+			{#if challenges.length === 0}
+				<div class="flex flex-col items-center justify-center py-12">
+					<svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 48 48">
+						<circle cx="24" cy="24" r="22" stroke-width="4" class="opacity-10" />
+						<path d="M32 32c-2 2-8 2-10 0-2-2-2-8 0-10 2-2 8-2 10 0 2 2 2 8 0 10z" stroke-width="3"
+									stroke-linecap="round" stroke-linejoin="round" />
+						<path d="M28 36l2 2m-10-2l-2 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+					<div class="font-medium text-gray-500 mb-1">No challenges generated yet</div>
+					<div class="text-gray-400 text-sm">Your challenge history will appear here after you generate some
+						challenges
+					</div>
+				</div>
+			{:else}
+				<div>
+					{#each challenges as challenge, i}
+						<ChallengeCard
+							challenge={challenge}
+							isLatest={i === 0}
+							onExpand={() => { expandedChallenge = challenge; showExpandedView = true; }}
+							onCopy={() => copyChallenge(challenge)}
+							onShare={() => shareChallenge(challenge)}
+							onRegenerate={generateChallenge}
+						/>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</main>
 
 	<!-- Footer -->
