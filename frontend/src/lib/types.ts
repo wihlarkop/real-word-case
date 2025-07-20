@@ -6,3 +6,8 @@ export type Challenge = {
   difficulty: string;
   date: string;
 };
+
+export type CategoryOption = {
+  value: string;
+  label: string;
+};

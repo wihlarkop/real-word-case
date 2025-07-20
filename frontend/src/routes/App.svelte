@@ -7,13 +7,13 @@
 	import DropdownGroup from '$lib/components/DropdownGroup.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import CustomMarkdown from '$lib/components/CustomMarkdown.svelte';
-	import type { Challenge } from '$lib/types';
+	import type { Challenge, CategoryOption } from '$lib/types';
 	import { fetchCategories, generateChallenge as apiGenerateChallenge } from '$lib/api';
 
 	let categories = $state({
-		industries: [] as { value: string; label: string }[],
-		roles: [] as { value: string; label: string }[],
-		difficulties: [] as { value: string; label: string }[]
+		industries: [] as CategoryOption[],
+		roles: [] as CategoryOption[],
+		difficulties: [] as CategoryOption[]
 	});
 
 	let selectedCategory = $state({
@@ -143,7 +143,6 @@
 		{#if challenges.length > 0}
 			<ChallengeCard
 				challenge={challenges[0]}
-				isLatest={true}
 				onExpand={() => { expandedChallenge = challenges[0]; showExpandedView = true; }}
 				onCopy={() => copyChallenge(challenges[0])}
 				onShare={() => shareChallenge(challenges[0])}
@@ -218,11 +217,11 @@
 					{#each challenges as challenge, i}
 						<ChallengeCard
 							challenge={challenge}
-							isLatest={i === 0}
 							onExpand={() => { expandedChallenge = challenge; showExpandedView = true; }}
 							onCopy={() => copyChallenge(challenge)}
 							onShare={() => shareChallenge(challenge)}
-							onRegenerate={generateChallenge}
+							onRegenerate={i === 0 ? generateChallenge : null}
+							onDelete={i !== 0 ? () => deleteChallenge(challenge.id) : null}
 						/>
 					{/each}
 				</div>

@@ -1,8 +1,12 @@
-import type { Challenge } from './types';
+import type { Challenge, CategoryOption } from './types';
 
 const BASE_URL = 'http://localhost:8000/api/v1';
 
-export async function fetchCategories() {
+export async function fetchCategories(): Promise<{
+	industries: CategoryOption[];
+	roles: CategoryOption[];
+	difficulties: CategoryOption[];
+}> {
 	const response = await fetch(`${BASE_URL}/category`);
 	if (!response.ok) {
 		throw new Error(`HTTP error! status: ${response.status}`);
