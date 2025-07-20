@@ -80,11 +80,6 @@
 			const { industry, role, difficulty } = selectedCategory;
 			challengeText = await apiGenerateChallenge(industry, role, difficulty);
 			showWarningBanner = false;
-		} catch (error) {
-			challengeText = error instanceof Error ? error.message : 'An unknown error occurred.';
-			showWarningBanner = true;
-		} finally {
-			const { industry, role, difficulty } = selectedCategory;
 			const newChallenge: Challenge = {
 				id: Date.now(),
 				text: challengeText,
@@ -98,6 +93,10 @@
 				})
 			};
 			challenges = [newChallenge, ...challenges];
+		} catch (error) {
+			challengeText = error instanceof Error ? error.message : 'An unknown error occurred.';
+			showWarningBanner = true;
+		} finally {
 			isGenerating = false;
 		}
 	}
